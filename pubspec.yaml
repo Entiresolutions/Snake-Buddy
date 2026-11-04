@@ -1,0 +1,47 @@
+name: snake_game
+description: "Classic Snake Game in Flutter"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  audioplayers: ^5.2.1
+  flame: ^1.33.0
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/sprites/clearcode/
+    - assets/sfx/
+    - assets/fonts/
+
+  fonts:
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka.ttf
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf
+
+flutter_native_splash:
+  color: "#F5F9EE"
+  image: assets/sprites/clearcode/head_right.png
+  android: true
+  ios: true
+  web: false
+  android_12:
+    color: "#F5F9EE"
+    image: assets/sprites/clearcode/head_right.png
