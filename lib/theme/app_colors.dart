@@ -51,4 +51,21 @@ abstract final class AppColors {
   static const dangerSoft = Color(0xFFFFEBEE);
   static const shadow = Color(0x141A2E1C);
   static const shadowElevated = Color(0x241A2E1C);
+
+  // Obstacles / Hazards
+  static const obstacleRock = Color(0xFF5D6D4E);
+  static const obstacleRockBevel = Color(0xFF7D8F6D);
+  static const obstacleRockShadow = Color(0xFF38432E);
+
+  static const portalPairA = Color(0xFF00E5FF); // Electric Cyan
+  static const portalPairB = Color(0xFFE040FB); // Vivid Purple
+  static const portalPairC = Color(0xFFFFAB00); // Amber
+  static const portalPairD = Color(0xFF00E676); // Emerald Green
+
+  static const obstacleSpikeOff = Color(0x384A614D); // Faint outline, safe
+  static const obstacleSpikeWarn = Color(0xFFFF9800); // Amber pulse, still safe
+  static const obstacleSpikeOn = Color(0xFFD32F2F); // Deadly solid danger
+
+  static const obstaclePatrol = Color(0xFFE65100); // Deep safety orange
+  static const obstaclePatrolChevron = Color(0xFFFFFFFF);
 }

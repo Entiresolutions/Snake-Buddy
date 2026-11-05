@@ -1,15 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:snake_game/controllers/campaign_controller.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
+import 'package:snake_game/screens/level_select_screen.dart';
 import 'package:snake_game/screens/settings_screen.dart';
 import 'package:snake_game/screens/theme_screen.dart';
 import 'package:snake_game/theme/app_colors.dart';
 import 'package:snake_game/theme/app_radius.dart';
 import 'package:snake_game/theme/app_spacing.dart';
 import 'package:snake_game/theme/app_text_styles.dart';
-import 'package:snake_game/ui/screens/snake/snake_play_screen.dart';
 import 'package:snake_game/widgets/app_card.dart';
 import 'package:snake_game/widgets/primary_button.dart';
 import 'package:snake_game/widgets/responsive_scaffold.dart';
@@ -19,12 +21,15 @@ import 'package:snake_game/widgets/stat_chip.dart';
 class HomeScreen extends StatefulWidget {
   final SettingsController settings;
   final CanvasThemeController canvasThemes;
+  final CampaignController campaign;
 
   HomeScreen({
     super.key,
     required this.settings,
     CanvasThemeController? canvasThemes,
-  }) : canvasThemes = canvasThemes ?? CanvasThemeController();
+    CampaignController? campaign,
+  })  : canvasThemes = canvasThemes ?? CanvasThemeController(),
+        campaign = campaign ?? CampaignController();
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -103,17 +108,23 @@ class _HomeScreenState extends State<HomeScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      'SNAKE',
-                      style: AppTextStyles.displayLarge.copyWith(
-                        color: AppColors.primaryDeep,
-                        fontSize: 46,
-                        letterSpacing: 4,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        child: Text(
+                          'SNAKE BUDDY',
+                          style: AppTextStyles.displayLarge.copyWith(
+                            color: AppColors.primaryDeep,
+                            fontSize: 42,
+                            letterSpacing: 3.5,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Container(
-                      width: 56,
+                      width: 76,
                       height: 4,
                       decoration: BoxDecoration(
                         color: AppColors.accentLime,
@@ -172,20 +183,39 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     const SizedBox(height: AppSpacing.xl),
 
-                    // High score chip
+                    // High score & Levels chips
                     AnimatedBuilder(
-                      animation: widget.settings,
-                      builder: (context, child) => StatChip(
-                        label: 'High Score',
-                        value: '${widget.settings.highScore}',
-                        icon: const Icon(
-                          Icons.emoji_events_rounded,
-                          color: AppColors.foodBananaText,
-                          size: 22,
-                        ),
-                        backgroundColor: AppColors.surface,
-                        borderColor: AppColors.border,
-                        valueColor: AppColors.primaryDeep,
+                      animation: Listenable.merge([widget.settings, widget.campaign]),
+                      builder: (context, child) => Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          StatChip(
+                            label: 'High Score',
+                            value: '${math.max(widget.settings.highScore, widget.campaign.bestRunScore)}',
+                            icon: const Icon(
+                              Icons.emoji_events_rounded,
+                              color: AppColors.foodBananaText,
+                              size: 18,
+                            ),
+                            backgroundColor: AppColors.surface,
+                            borderColor: AppColors.border,
+                            valueColor: AppColors.primaryDeep,
+                          ),
+                          StatChip(
+                            label: 'Levels',
+                            value: '${widget.campaign.highestUnlockedLevel}/30',
+                            icon: const Icon(
+                              Icons.flag_rounded,
+                              color: AppColors.primary,
+                              size: 16,
+                            ),
+                            backgroundColor: AppColors.surface,
+                            borderColor: AppColors.border,
+                            valueColor: AppColors.primaryDeep,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -199,9 +229,10 @@ class _HomeScreenState extends State<HomeScreen>
                         semanticsLabel: 'Start game',
                         onPressed: () => Navigator.of(context).push(
                           _route(
-                            SnakePlayScreen(
+                            LevelSelectScreen(
                               settings: widget.settings,
                               canvasThemes: widget.canvasThemes,
+                              campaign: widget.campaign,
                             ),
                           ),
                         ),
@@ -239,8 +270,154 @@ class _HomeScreenState extends State<HomeScreen>
             left: AppSpacing.sm,
             child: _buildThemeButton(context),
           ),
+
+          // Top Right Unlock All Button (for testing)
+          Positioned(
+            top: AppSpacing.sm,
+            right: AppSpacing.sm,
+            child: _buildUnlockAllButton(context),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildUnlockAllButton(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([widget.campaign, widget.canvasThemes]),
+      builder: (context, _) {
+        final allLevelsUnlocked = widget.campaign.highestUnlockedLevel >= 30;
+        final allThemesUnlocked =
+            widget.canvasThemes.unlockedCount >= widget.canvasThemes.totalCount;
+        final isAllUnlocked = allLevelsUnlocked && allThemesUnlocked;
+
+        return Semantics(
+          button: true,
+          label: isAllUnlocked
+              ? 'All levels and themes unlocked for testing'
+              : 'Unlock all levels and themes for testing',
+          child: Tooltip(
+            message: isAllUnlocked
+                ? 'All levels & themes unlocked (Tap to reset)'
+                : 'Unlock all levels & themes for testing',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  if (isAllUnlocked) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'All 30 levels & themes are currently unlocked.',
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.primaryDeep,
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 4),
+                        action: SnackBarAction(
+                          label: 'RESET',
+                          textColor: AppColors.accentLime,
+                          onPressed: () async {
+                            await widget.campaign.resetCampaign();
+                            await widget.canvasThemes.resetThemesForTesting();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Reset levels & themes to default.',
+                                    style: AppTextStyles.bodyMedium
+                                        .copyWith(color: Colors.white),
+                                  ),
+                                  backgroundColor: AppColors.primaryDeep,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  } else {
+                    await widget.campaign.unlockAllLevelsForTesting();
+                    await widget.canvasThemes.unlockAllThemesForTesting();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'All 30 levels and all themes unlocked!',
+                            style: AppTextStyles.bodyMedium
+                                .copyWith(color: Colors.white),
+                          ),
+                          backgroundColor: AppColors.primaryDeep,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+                borderRadius: AppRadius.pillRadius,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isAllUnlocked
+                        ? AppColors.primarySoft
+                        : AppColors.surface,
+                    borderRadius: AppRadius.pillRadius,
+                    border: Border.all(
+                      color: isAllUnlocked
+                          ? AppColors.primary
+                          : AppColors.border,
+                      width: 1.5,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadow,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isAllUnlocked
+                            ? Icons.lock_open_rounded
+                            : Icons.key_rounded,
+                        color: isAllUnlocked
+                            ? AppColors.primary
+                            : AppColors.primaryDeep,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        isAllUnlocked ? 'UNLOCKED' : 'UNLOCK ALL',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: isAllUnlocked
+                              ? AppColors.primary
+                              : AppColors.primaryDeep,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -346,46 +523,76 @@ class _HomeScreenState extends State<HomeScreen>
 
         final double phase = t * 2 * math.pi;
 
-        // Smooth continuous elliptical floating glide (calm, fluid, no abrupt reversals)
+        // Smooth continuous floating glide (no rotation or scaling to keep pixel lines perfectly smooth)
         final double crawlX =
-            disableAnimations ? 0.0 : math.sin(phase) * 14.0;
+            disableAnimations ? 0.0 : math.sin(phase) * 12.0;
         final double crawlY =
-            disableAnimations ? 0.0 : math.cos(phase) * 2.2;
-        final double tilt =
-            disableAnimations ? 0.0 : -math.sin(phase) * 0.02;
-        final double breathe =
-            disableAnimations ? 1.0 : (1.0 + math.sin(phase * 2) * 0.012);
+            disableAnimations ? 0.0 : math.sin(phase * 2) * 2.5;
 
-        const double segSize = 40.0;
+        const double segSize = 38.0;
+        const double overlap = 2.5;
+        const double step = segSize - overlap; // 35.5
+        const double totalWidth = segSize + step * 3; // 144.5
 
-        // All 4 segments locked seamlessly as a single continuous part with 0.5dp overlap
-        Widget unifiedSnakeBody = Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _sprite('assets/sprites/clearcode/tail_left.png', segSize),
-            Transform.translate(
-              offset: const Offset(-0.5, 0),
-              child: _sprite(
-                'assets/sprites/clearcode/body_horizontal.png',
-                segSize,
+        // Seamless unified snake: solid underlay eliminates any potential seam,
+        // while 2.5dp overlap guarantees segments fuse into a single continuous body.
+        Widget unifiedSnakeBody = SizedBox(
+          width: totalWidth,
+          height: segSize,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // 1. Solid underlay matching exact body color (0xFF5B7BF9)
+              Positioned(
+                left: 12.0,
+                right: 14.0,
+                top: 4.75,
+                bottom: 4.75,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5B7BF9),
+                    borderRadius: BorderRadius.circular(14.0),
+                  ),
+                ),
               ),
-            ),
-            Transform.translate(
-              offset: const Offset(-1.0, 0),
-              child: _sprite(
-                'assets/sprites/clearcode/body_horizontal.png',
-                segSize,
+
+              // 2. Tail segment (left)
+              Positioned(
+                left: 0,
+                top: 0,
+                width: segSize,
+                height: segSize,
+                child: _sprite('assets/sprites/clearcode/tail_left.png', segSize),
               ),
-            ),
-            Transform.translate(
-              offset: const Offset(-1.5, 0),
-              child: _sprite(
-                'assets/sprites/clearcode/head_right.png',
-                segSize,
+
+              // 3. Middle body segment 1
+              Positioned(
+                left: step,
+                top: 0,
+                width: segSize,
+                height: segSize,
+                child: _sprite('assets/sprites/clearcode/body_horizontal.png', segSize),
               ),
-            ),
-          ],
+
+              // 4. Middle body segment 2
+              Positioned(
+                left: step * 2,
+                top: 0,
+                width: segSize,
+                height: segSize,
+                child: _sprite('assets/sprites/clearcode/body_horizontal.png', segSize),
+              ),
+
+              // 5. Head segment (right, eyes facing forward)
+              Positioned(
+                left: step * 3,
+                top: 0,
+                width: segSize,
+                height: segSize,
+                child: _sprite('assets/sprites/clearcode/head_right.png', segSize),
+              ),
+            ],
+          ),
         );
 
         if (activeTheme.snakeColorFilter != null) {
@@ -395,17 +602,14 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }
 
-        // Animate the entire snake as one cohesive entity
+        // Translate the unified snake as one solid piece
         final Widget animatedSnake = Transform.translate(
           offset: Offset(crawlX, crawlY),
-          child: Transform.rotate(
-            angle: tilt,
-            child: Transform.scale(
-              scale: breathe,
-              child: unifiedSnakeBody,
-            ),
-          ),
+          child: unifiedSnakeBody,
         );
+
+        final double shadowWidth =
+            140.0 + (disableAnimations ? 0.0 : math.cos(phase * 2) * 4.0);
 
         return SizedBox(
           height: 56,
@@ -416,7 +620,7 @@ class _HomeScreenState extends State<HomeScreen>
               Transform.translate(
                 offset: Offset(crawlX, 20),
                 child: Container(
-                  width: 145 * breathe,
+                  width: shadowWidth,
                   height: 10,
                   decoration: BoxDecoration(
                     color: const Color(0x161A2E1C),
@@ -445,6 +649,6 @@ class _HomeScreenState extends State<HomeScreen>
         height: size,
         fit: BoxFit.contain,
         gaplessPlayback: true,
-        filterQuality: FilterQuality.medium,
+        filterQuality: FilterQuality.none,
       );
 }

@@ -126,4 +126,26 @@ class CanvasThemeController extends ChangeNotifier {
 
     return newlyUnlocked;
   }
+
+  /// Unlocks all canvas themes for testing.
+  Future<void> unlockAllThemesForTesting() async {
+    for (final theme in kCanvasThemes) {
+      _unlockedIds.add(theme.id);
+    }
+    _preferences ??= await SharedPreferences.getInstance();
+    await _preferences?.setStringList(_unlockedKey, _unlockedIds.toList());
+    notifyListeners();
+  }
+
+  /// Resets unlocked canvas themes to default (Meadow only) for testing.
+  Future<void> resetThemesForTesting() async {
+    _unlockedIds = {'meadow'};
+    _viewedIds = {'meadow'};
+    _selectedThemeId = 'meadow';
+    _preferences ??= await SharedPreferences.getInstance();
+    await _preferences?.setStringList(_unlockedKey, ['meadow']);
+    await _preferences?.setStringList(_viewedKey, ['meadow']);
+    await _preferences?.setString(_selectedKey, 'meadow');
+    notifyListeners();
+  }
 }

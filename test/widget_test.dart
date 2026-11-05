@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
@@ -31,7 +32,18 @@ void main() {
     await tester.tap(find.text('PLAY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('SELECT LEVEL'), findsOneWidget);
+
+    // Tap level 1 tile
+    await tester.tap(find.byKey(const ValueKey('level_tile_1')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('SNAKE'), findsOneWidget);
+
+    // Dismiss intro card to start game
+    await tester.tap(find.text('Tap anywhere to start'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byTooltip('Pause'), findsOneWidget);
     expect(find.text('Start'), findsNothing);
   });

@@ -13,6 +13,8 @@ class StatChip extends StatefulWidget {
   final Color? valueColor;
   final bool animateOnChange;
   final String? semanticsLabel;
+  final bool compact;
+  final EdgeInsetsGeometry? padding;
 
   const StatChip({
     super.key,
@@ -24,6 +26,8 @@ class StatChip extends StatefulWidget {
     this.valueColor,
     this.animateOnChange = true,
     this.semanticsLabel,
+    this.compact = false,
+    this.padding,
   });
 
   @override
@@ -75,18 +79,25 @@ class _StatChipState extends State<StatChip>
     final bg = widget.backgroundColor ?? AppColors.surface;
     final border = widget.borderColor ?? AppColors.border;
     final valColor = widget.valueColor ?? AppColors.primaryDeep;
+    final effectivePadding = widget.padding ??
+        (widget.compact
+            ? const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 4,
+              )
+            : const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ));
 
     return Semantics(
       label: widget.semanticsLabel ?? '${widget.label}: ${widget.value}',
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
+        padding: effectivePadding,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: AppRadius.pillRadius,
-          border: Border.all(color: border, width: 1.5),
+          border: Border.all(color: border, width: widget.compact ? 1.0 : 1.5),
           boxShadow: const [
             BoxShadow(
               color: AppColors.shadow,
@@ -102,16 +113,17 @@ class _StatChipState extends State<StatChip>
             children: [
               if (widget.icon != null) ...[
                 widget.icon!,
-                const SizedBox(width: AppSpacing.xs + 2),
+                SizedBox(width: widget.compact ? 3 : AppSpacing.xs + 2),
               ],
               Text(
                 widget.label.toUpperCase(),
                 style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textSecondary,
-                  letterSpacing: 0.8,
+                  letterSpacing: widget.compact ? 0.4 : 0.8,
+                  fontSize: widget.compact ? 10 : null,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: widget.compact ? 4 : AppSpacing.sm),
               AnimatedBuilder(
                 animation: _popAnimation,
                 builder: (context, child) => Transform.scale(
@@ -122,6 +134,7 @@ class _StatChipState extends State<StatChip>
                   widget.value,
                   style: AppTextStyles.scoreChip.copyWith(
                     color: valColor,
+                    fontSize: widget.compact ? 13 : null,
                   ),
                 ),
               ),

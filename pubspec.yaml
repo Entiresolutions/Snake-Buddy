@@ -1,5 +1,5 @@
 name: snake_game
-description: "Classic Snake Game in Flutter"
+description: "Snake Buddy - A modern, responsive snake adventure powered by Entire Solution."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -19,6 +19,8 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_native_splash: ^2.4.8
+  flutter_launcher_icons: ^0.14.4
+  image: ^4.12.0
 
 flutter:
   uses-material-design: true
@@ -45,3 +47,21 @@ flutter_native_splash:
   android_12:
     color: "#F5F9EE"
     image: assets/sprites/clearcode/head_right.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_foreground_inset: 0
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#4CAF50"
+  windows:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+

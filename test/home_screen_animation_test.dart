@@ -79,5 +79,46 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('HomeScreen UNLOCK ALL button unlocks all levels and themes for testing',
+      (tester) async {
+    final settings = SettingsController();
+    await settings.load();
+    final canvasThemes = CanvasThemeController();
+    await canvasThemes.load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        themeMode: ThemeMode.light,
+        home: HomeScreen(
+          settings: settings,
+          canvasThemes: canvasThemes,
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    // Initially UNLOCK ALL button is present
+    expect(find.text('UNLOCK ALL'), findsOneWidget);
+    expect(find.text('1/30'), findsOneWidget);
+    expect(canvasThemes.unlockedCount, 1);
+
+    // Tap UNLOCK ALL
+    await tester.tap(find.text('UNLOCK ALL'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Verifications:
+    // 1. All themes unlocked
+    expect(canvasThemes.unlockedCount, canvasThemes.totalCount);
+    // 2. Levels chip shows 30/30
+    expect(find.text('30/30'), findsOneWidget);
+    // 3. Button changes state to UNLOCKED
+    expect(find.text('UNLOCKED'), findsOneWidget);
+    // 4. SnackBar is displayed
+    expect(find.text('All 30 levels and all themes unlocked!'), findsOneWidget);
+  });
 }
 

@@ -59,6 +59,25 @@ Board and snake coloring are driven dynamically by `CanvasTheme` (`lib/theme/can
 5. **Frosty Peak (`frost`):** 100 pts. Board `#E6F1F9` / `#D8E8F4`, frame `#9DBBD3`, grid `#33426E8F`. Snake: Magenta (target hue $320^\circ$).
 6. **Midnight Neon (`midnight`):** 150 pts. Board `#2E3B5A` / `#27334F`, frame `#141C30`, grid `#26AAB8E0`. Snake: Neon Lime (target hue $90^\circ$, 1.15 sat, 1.1 bright), halo opacity 0.35.
 
+### 2.8 Obstacle & Hazard Design Tokens
+Obstacles derive their colors dynamically from tokens in `AppColors` and active `CanvasTheme` overrides maintaining $\ge 3:1$ contrast against both checker tones:
+- **Rocks:**
+  - `obstacleRock`: `#5D6D4E` (Meadow stone tone, with per-canvas contrast overrides).
+  - `obstacleRockBevel`: `#7D8F6D` (Top-left bevel highlight).
+  - `obstacleRockShadow`: `#38432E` (Bottom-right soft shadow).
+- **Portals:**
+  - `portalPairA`: `#00E5FF` (Electric Cyan).
+  - `portalPairB`: `#E040FB` (Vivid Purple / Magenta).
+  - `portalPairC`: `#FFAB00` (Amber Glow).
+  - `portalPairD`: `#00E676` (Emerald Green).
+- **Spikes:**
+  - `obstacleSpikeOff`: `#384A614D` (Faint safe outline).
+  - `obstacleSpikeWarn`: `#FF9800` (Pulsing amber hazard state, safe).
+  - `obstacleSpikeOn`: `#D32F2F` (Solid deadly danger red with 4 sharp protruding points).
+- **Patrol Blocks:**
+  - `obstaclePatrol`: `#E65100` (High contrast safety orange block).
+  - `obstaclePatrolChevron`: `#FFFFFF` (Directional chevron arrow).
+
 ---
 
 ## 3. Typography Specifications
@@ -158,13 +177,27 @@ Fonts are bundled locally in `assets/fonts/` for 100% offline functionality.
   - Unlocked state: "Tap to use" secondary callout.
   - Locked state: Grayscale/desaturation filter (0.24 saturation), 42% dark overlay, lock badge, unlock score requirement, and a mini progress bar showing high score toward unlock.
 
-### 6.7 Game Over Dialog
-- White rounded card with soft elevated shadow.
-- Icon badge (Golden trophy if new best score achieved, danger badge otherwise).
-- Big score readout and high score comparison.
-- "NEW BEST!" celebratory badge when applicable.
-- **Unlocked Canvas Celebration:** If one or more canvases were unlocked during the round, displays an animated banner highlighting the new canvas with an instant "USE NOW" button.
-- Full-width "PLAY AGAIN" and secondary "HOME" buttons.
+### 6.7 Level Select Screen
+- **App Header:** Displays title "SELECT LEVEL", back arrow button to Home, and top-right `StatChip` displaying overall stars progress (`x/90`).
+- **Tier Grouped Cards:** 6 distinct `AppCard` containers corresponding to the 6 campaign tiers:
+  - Header badge displaying the tier number and tier title in `primaryDeep`.
+  - Responsive grid: 3 columns on phones (<600dp), 5 columns on tablets/wide screens ($\ge 600$dp).
+- **Level Tile States:**
+  - *Unlocked:* Clean surface background, bold level number, and a row of 3 small stars indicating best achievement (0 to 3 gold stars).
+  - *Current Level:* Highlighted with 2.2dp `AppColors.primary` border, soft glowing elevation shadow, and bright white surface.
+  - *Locked:* Dimmed muted surface, lock icon, muted level number. Tapping triggers a damped 350ms shake animation with floating SnackBar guidance ("Clear Level N-1 to unlock!").
+  - *Boss & Mini-Boss Badges:* Boss levels (L10, L20, L30) feature a gold crown badge in the top-right corner; mini-bosses (L5, L15, L25) feature a lime flag badge.
+
+### 6.8 Level Intro Card
+- Modal overlay presented for ~1.8s before level start (tap anywhere to skip).
+- Displays tier category pill, level number, title, objective pill ("GOAL: Score 100 points"), and mechanic hint pill with lightbulb icon when introducing new hazards.
+- Dismissing the card smoothly begins the game loop and triggers `start.mp3`.
+
+### 6.9 Campaign Dialogs
+- **Pause Menu:** Centered card with pause badge, current Level, Score out of 100 chip, Primary "RESUME" button, Secondary "RESTART LEVEL", Secondary "HOME", and a "LEVELS" text button.
+- **Game Over Dialog:** Danger or trophy badge, "Level N" subtitle, Level score, Total run score, and Best chips. Primary "SECOND CHANCE" CTA (showing remaining chances out of 2) or disabled state when exhausted, Secondary "RETRY LEVEL", and bottom action row with "LEVELS" and "HOME". Celebratory canvas unlock row when newly unlocked.
+- **Level Complete Dialog (L1–L29):** Elastic entrance scale, gold trophy badge, "LEVEL N CLEARED!", 3 sequentially filling stars with 250ms stagger, Level N+1 unlocked pill, metrics chips, Primary "NEXT LEVEL", Secondary "REPLAY", and "LEVELS".
+- **Game Complete Dialog (after L30):** Grand finale celebration with a giant trophy, falling fruit confetti (rendered with existing fruit sprites, disabled under reduced motion), Total Stars (`x/90`), Final Run Score, Best, and action buttons "PLAY AGAIN", "LEVELS", "HOME".
 
 ---
 

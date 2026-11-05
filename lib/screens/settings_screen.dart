@@ -300,7 +300,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxl),
             Center(
               child: Text(
-                'Snake Game · Fresh Meadow Light · Version 2.0',
+                'Snake Buddy · Fresh Meadow Light · Version 2.0',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textMuted,
                 ),

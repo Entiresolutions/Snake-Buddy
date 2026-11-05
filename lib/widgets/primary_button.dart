@@ -92,24 +92,29 @@ class _PrimaryButtonState extends State<PrimaryButton>
                 ]
               : null,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.icon != null) ...[
-              Icon(widget.icon, color: fg, size: 22),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-            Text(
-              widget.label,
-              style: AppTextStyles.labelLarge.copyWith(
-                color: fg,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.1,
-              ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: fg, size: 22),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                Text(
+                  widget.label,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: fg,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

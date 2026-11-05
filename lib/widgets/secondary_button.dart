@@ -13,6 +13,8 @@ class SecondaryButton extends StatefulWidget {
   final Color? textColor;
   final Color? backgroundColor;
   final String? semanticsLabel;
+  final EdgeInsetsGeometry? padding;
+  final double? fontSize;
 
   const SecondaryButton({
     super.key,
@@ -24,6 +26,8 @@ class SecondaryButton extends StatefulWidget {
     this.textColor,
     this.backgroundColor,
     this.semanticsLabel,
+    this.padding,
+    this.fontSize,
   });
 
   @override
@@ -81,7 +85,7 @@ class _SecondaryButtonState extends State<SecondaryButton>
       ),
       child: Container(
         height: widget.height,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: AppRadius.pillRadius,
@@ -97,24 +101,29 @@ class _SecondaryButtonState extends State<SecondaryButton>
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.icon != null) ...[
-              Icon(widget.icon, color: text, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-            Text(
-              widget.label,
-              style: AppTextStyles.labelLarge.copyWith(
-                color: text,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: text, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                Text(
+                  widget.label,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: text,
+                    fontSize: widget.fontSize ?? 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

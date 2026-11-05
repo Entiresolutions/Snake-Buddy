@@ -27,6 +27,20 @@ abstract final class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  static const TextStyle titleLarge = TextStyle(
+    fontFamily: headingFont,
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle titleMedium = TextStyle(
+    fontFamily: headingFont,
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
   static const TextStyle appBarTitle = TextStyle(
     fontFamily: headingFont,
     fontSize: 20,

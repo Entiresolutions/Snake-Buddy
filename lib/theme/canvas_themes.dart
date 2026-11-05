@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:snake_game/theme/app_colors.dart';
@@ -149,6 +151,139 @@ class CanvasTheme {
     }
 
     return combined;
+  }
+
+  Color get obstacleRockColor {
+    switch (id) {
+      case 'meadow':
+        return const Color(0xFF4A5A3D);
+      case 'ocean':
+        return const Color(0xFF24485D);
+      case 'desert':
+        return const Color(0xFF6B451A);
+      case 'candy':
+        return const Color(0xFF752C55);
+      case 'frost':
+        return const Color(0xFF324A60);
+      case 'midnight':
+        // High-contrast cyber slate on dark navy board
+        return const Color(0xFF45577D);
+      default:
+        return AppColors.obstacleRock;
+    }
+  }
+
+  Color get obstacleRockBevel {
+    switch (id) {
+      case 'meadow':
+        return const Color(0xFF70855D);
+      case 'ocean':
+        return const Color(0xFF437593);
+      case 'desert':
+        return const Color(0xFF986831);
+      case 'candy':
+        return const Color(0xFFA04B7B);
+      case 'frost':
+        return const Color(0xFF567697);
+      case 'midnight':
+        return const Color(0xFF7591D0);
+      default:
+        return AppColors.obstacleRockBevel;
+    }
+  }
+
+  Color get obstacleRockShadow {
+    switch (id) {
+      case 'meadow':
+        return const Color(0xFF2C3723);
+      case 'ocean':
+        return const Color(0xFF132A37);
+      case 'desert':
+        return const Color(0xFF3F250B);
+      case 'candy':
+        return const Color(0xFF451430);
+      case 'frost':
+        return const Color(0xFF1B2C3C);
+      case 'midnight':
+        return const Color(0xFF161F33);
+      default:
+        return AppColors.obstacleRockShadow;
+    }
+  }
+
+  Color get obstacleRockBorder {
+    switch (id) {
+      case 'meadow':
+        return const Color(0xFF232D1B);
+      case 'ocean':
+        return const Color(0xFF0E222D);
+      case 'desert':
+        return const Color(0xFF331D08);
+      case 'candy':
+        return const Color(0xFF330C22);
+      case 'frost':
+        return const Color(0xFF142230);
+      case 'midnight':
+        // Electric neon cyan glow border for absolute visibility
+        return const Color(0xFF00E5FF);
+      default:
+        return const Color(0xFF232D1B);
+    }
+  }
+
+  Color get obstacleSpikeOffColor {
+    switch (id) {
+      case 'midnight':
+        return const Color(0xFF00E5FF);
+      default:
+        return boardGrid.withOpacity(0.55);
+    }
+  }
+
+  Color get obstacleSpikeBaseColor {
+    switch (id) {
+      case 'midnight':
+        return const Color(0x2800E5FF);
+      default:
+        return boardGrid.withOpacity(0.18);
+    }
+  }
+
+  Color get obstaclePatrolColor {
+    switch (id) {
+      case 'meadow':
+        return const Color(0xFFE65100); // Vivid safety orange
+      case 'ocean':
+        return const Color(0xFFD84315); // Deep coral flame
+      case 'desert':
+        return const Color(0xFFC2185B); // Desert crimson/magenta
+      case 'candy':
+        return const Color(0xFF00897B); // Spearmint teal
+      case 'frost':
+        return const Color(0xFFE64A19); // Fiery arctic orange
+      case 'midnight':
+        return const Color(0xFFFF3D00); // Neon blazing orange-red
+      default:
+        return AppColors.obstaclePatrol;
+    }
+  }
+
+  Color get obstaclePatrolBorder {
+    switch (id) {
+      case 'midnight':
+        return const Color(0xFFFFEA00); // Neon electric yellow
+      default:
+        return Colors.white.withOpacity(0.9);
+    }
+  }
+
+  Color get obstaclePatrolChevron {
+    switch (id) {
+      case 'midnight':
+        return Colors.white;
+      default:
+        return AppColors.obstaclePatrolChevron;
+    }
   }
 }
 

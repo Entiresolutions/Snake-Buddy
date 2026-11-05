@@ -471,3 +471,4 @@ This document contains the ASCII layout map and hazard statistics for all 30 lev
 ### Level 30: The Final Gauntlet
 - **Type:** Final Boss 👑
 - **Hazards:** 2 Patrols, 4 Portals (A, B), 12 Spikes, 20 Rocks (242 free cells)
+

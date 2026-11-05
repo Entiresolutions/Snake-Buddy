@@ -1,0 +1,11 @@
+# Instructions for Google Play Release Signing:
+# 1. Generate an upload keystore if you don't have one:
+#    keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+# 2. Place upload-keystore.jks in android/app/ or specify its absolute/relative path below.
+# 3. Rename this file to `key.properties` (never commit key.properties to public git):
+#
+# storePassword=<your-keystore-password>
+# keyPassword=<your-key-password>
+# keyAlias=upload
+# storeFile=upload-keystore.jks
+

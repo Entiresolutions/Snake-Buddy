@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
 import 'package:snake_game/screens/home_screen.dart';
 import 'package:snake_game/screens/settings_screen.dart';
 import 'package:snake_game/ui/screens/snake/snake_play_screen.dart';
+import 'package:snake_game/widgets/dialogs/game_complete_dialog.dart';
+import 'package:snake_game/widgets/dialogs/game_over_dialog.dart';
+import 'package:snake_game/widgets/dialogs/level_complete_dialog.dart';
 
 void main() {
   const resolutions = [
@@ -155,6 +159,114 @@ void main() {
         });
       }
     }
+
+    testWidgets('GameOverDialog, LevelCompleteDialog, GameCompleteDialog render on narrow screens without overflow',
+        (tester) async {
+      final testSizes = [
+        const Size(320, 568),
+        const Size(360, 640),
+        const Size(375, 667),
+        const Size(390, 844),
+      ];
+
+      final canvasThemes = CanvasThemeController();
+      await canvasThemes.load();
+
+      for (final sz in testSizes) {
+        for (final scale in [1.0, 1.3]) {
+          tester.view.physicalSize = sz;
+          tester.view.devicePixelRatio = 1.0;
+
+          // 1. GameOverDialog
+          await tester.pumpWidget(
+            MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(
+                  size: sz,
+                  textScaler: TextScaler.linear(scale),
+                ),
+                child: Scaffold(
+                  body: GameOverDialog(
+                    levelId: 7,
+                    levelScore: 0,
+                    runScore: 0,
+                    bestRunScore: 3,
+                    chancesRemaining: 2,
+                    isNewBest: false,
+                    unlockedThemes: const [],
+                    canvasThemes: canvasThemes,
+                    onSecondChance: () {},
+                    onRetry: () {},
+                    onLevelSelect: () {},
+                    onHome: () {},
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+          expect(find.text('GAME OVER'), findsOneWidget);
+          expect(find.text('Level 7'), findsOneWidget);
+          expect(find.text('0/100'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+
+          // 2. LevelCompleteDialog
+          await tester.pumpWidget(
+            MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(
+                  size: sz,
+                  textScaler: TextScaler.linear(scale),
+                ),
+                child: Scaffold(
+                  body: LevelCompleteDialog(
+                    levelId: 7,
+                    levelScore: 104,
+                    runScore: 240,
+                    bestRunScore: 350,
+                    earnedStars: 3,
+                    unlockedThemes: const [],
+                    canvasThemes: canvasThemes,
+                    onNextLevel: () {},
+                    onReplay: () {},
+                    onLevelSelect: () {},
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+          expect(find.text('LEVEL 7 CLEARED!'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+
+          // 3. GameCompleteDialog
+          await tester.pumpWidget(
+            MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(
+                  size: sz,
+                  textScaler: TextScaler.linear(scale),
+                ),
+                child: Scaffold(
+                  body: GameCompleteDialog(
+                    runScore: 3200,
+                    bestRunScore: 3200,
+                    totalStars: 90,
+                    onPlayAgain: () {},
+                    onLevelSelect: () {},
+                    onHome: () {},
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+          expect(find.text('YOU WIN!'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        }
+      }
+      tester.view.resetPhysicalSize();
+    });
   });
 
   group('Gameplay & Mechanics Verification', () {

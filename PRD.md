@@ -71,10 +71,62 @@
 
 ### 3.7 Sprite Selection Logic (ClearCode 14-Sprite Engine)
 Each body segment is mapped to its appropriate asset based on adjacent segment directions:
-- **Head:** `head_up.png`, `head_down.png`, `head_left.png`, `head_right.png` determined by vector $(head - segment_1)$.
-- **Tail:** `tail_up.png`, `tail_down.png`, `tail_left.png`, `tail_right.png` determined by vector $(segment_{n-1} - tail)$.
+- **Head:** `head_up.png`, `head_down.png`, `head_left.png`, `head_right.png` determined by vector $(head - segment_1)$. Across portal teleportation jumps, the segment's entered direction heading is used to guarantee correct sprite orientation.
+- **Tail:** `tail_up.png`, `tail_down.png`, `tail_left.png`, `tail_right.png` determined by vector $(segment_{n-1} - tail)$ or stored tail direction across non-adjacent jumps.
 - **Straight Body:** `body_horizontal.png` or `body_vertical.png`.
 - **Corner Turns:** `body_topleft.png`, `body_topright.png`, `body_bottomleft.png`, `body_bottomright.png` calculated by evaluating $(prev - current)$ and $(next - current)$ deltas.
+
+### 3.8 Campaign Mode & 30-Level Progression
+- **Overview:** The game is structured into a 30-level campaign across 6 themed tiers:
+  1. *Meadow Warm-Up* (L1–L5): Introduction to mechanics, sparse rocks, mini-boss side hedges.
+  2. *Rocky Trail* (L6–L10): Staggered slalom walls, pillars, lane grids, and The Gate boss.
+  3. *Portal Valley* (L11–L15): Teleportation portal pairs A and B, corridor mazes, Twin Rivers mini-boss.
+  4. *Blink Canyon* (L16–L20): Periodic blinking spike fields (OFF/WARN/ON), rhythmic bridge gauntlets, and Blink Canyon boss.
+  5. *Patrol Peaks* (L21–L25): Moving patrol blocks with directional chevrons (ping-pong and loop paths), Peak Patrol mini-boss.
+  6. *Neon Gauntlet* (L26–L30): Master combinations of dense rocks, portals, fast-stepping patrols, and alternating spike bands culminating in The Final Gauntlet boss.
+- **Target Score:** Single unified threshold of 100 points (`LevelRules.targetScore = 100`) to clear any level.
+- **Run Score & High Score:** `runScore` accumulates all points scored during an unbroken level run (without returning to Home/Level Select). Best `runScore` is persisted as the overall high score.
+- **Canvas Theme Unlocks:** Canvas unlock thresholds (15, 35, 60, 100, 150) are evaluated against `runScore`.
+- **Speed Ramp Formula:** Logic tick duration ramps smoothly as the player advances:
+  $$\text{tickMs} = \max(90, \text{baseTick}(\text{difficulty}) \times (1 - 0.01 \times (\text{level} - 1)))$$
+  Where base ticks are Easy (300ms), Normal (240ms), and Hard (160ms). Sprite tween durations strictly match `tickMs`.
+- **Star Rating:** Up to 3 stars per level:
+  - 3 Stars: Level cleared with 0 second chances used.
+  - 2 Stars: Level cleared with 1 second chance used.
+  - 1 Star: Level cleared with 2 second chances used.
+  Stars are permanent and never downgraded on replay. Total stars tally up to 90 (`x/90`).
+
+### 3.9 Hazard System (Obstacles)
+- **Rocks (Static `#`):** Rounded stone blocks with custom bevel highlights and shadows matching active CanvasTheme contrast tokens ($\ge 3:1$). Deadly on collision.
+- **Portals (Pairs A–D):** Swirling dual-arc rings with pair colors (A: Cyan, B: Magenta, C: Amber, D: Emerald). Entering one instantly teleports the head to the partner cell maintaining movement direction. Traversal snaps without flying cross-board tweens.
+- **Spikes (Blinking `1`–`4`):** Cycle through `OFF` (faint safe outline) $\to$ `WARN` (pulsing amber hazard, safe) $\to$ `ON` (solid danger red, deadly). Only moving into an `ON` spike causes death; turning on underneath does not kill.
+- **Patrol Blocks (Moving):** 1x1 or 1x2 blocks stepping along fixed ping-pong or loop paths with high-contrast directional chevrons. Moves smoothly in sync with the snake tween. Fatal on direct collision or head/patrol swap collision in the same tick.
+- **Strict Engine Tick Order:**
+  1. Apply buffered input direction.
+  2. Compute raw head position (bounds check; wall hit = death).
+  3. If head hits portal, teleport to partner cell.
+  4. Advance spike cycle ticks and patrol positions.
+  5. Check collision on final head cell (rocks, self, ON spikes, patrol cells, patrol swaps).
+  6. Food ingestion, growth, scoring, and level clear evaluation (`levelScore >= 100`).
+- **Safe Food Spawning:** Food never spawns on snake cells, rocks, portals, spike cells, or patrol paths.
+
+### 3.10 Second Chance System
+- Players have up to 2 second chances per level attempt (`kMaxChancesPerAttempt = 2`).
+- Maintains an 8-tick ring buffer snapshot of game states (snake positions, headings, food, scores, spike and patrol states).
+- On death, after the dizzy star animation and death audio, player may activate "SECOND CHANCE".
+- Rewinds ~3 ticks back and simulates 2 steps ahead to verify safety. If fatal, walks further back in the buffer, or auto-turns to an open safe direction from the oldest snapshot.
+- Plays a 3-2-1 "GET READY" countdown overlay before resuming gameplay loop with start audio.
+
+### 3.11 Progression Flow & Dialogs
+- **Flow:** `Splash` $\to$ `Home` $\to$ `PLAY` $\to$ `Level Select` $\to$ `Level Intro Card` $\to$ `Gameplay` $\to$ `Level Complete / Game Over`.
+- **Level Select Screen:** Displays 30 tiles across 6 tier cards (3 columns on mobile, 5 on wide screens), total stars chip `x/90`, locked tile shake with SnackBar guidance, boss crowns, and mini-boss flags.
+- **Level Intro Card:** 1.8s dismissible overlay showing level number, name, tier, goal ("Score 100 points"), and mechanic hints.
+- **HUD:** Row 1 displays Level chip, Total Score chip (`runScore`), and Best chip. Row 2 displays an animated progress bar with bold label (`x / 100`).
+- **Dialogs:**
+  - *Pause Menu:* Resume, Restart Level, Levels, Home.
+  - *Game Over:* Level score, total score, best, Second Chance CTA (with remaining count), Retry Level, Levels, Home, and Canvas unlock announcements.
+  - *Level Complete (L1–L29):* Elastic scale-in, gold trophy badge, 3 sequentially filling stars (250ms stagger), Next Level CTA, Replay, Levels.
+  - *Game Complete (after L30):* Grand finale trophy, falling fruit confetti, final stats (Total Stars x/90, Run Score, Best), Play Again, Levels, Home.
 
 ---
 

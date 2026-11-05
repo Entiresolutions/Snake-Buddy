@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:snake_game/controllers/campaign_controller.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
 import 'package:snake_game/screens/home_screen.dart';
@@ -14,12 +15,15 @@ import 'package:snake_game/widgets/responsive_scaffold.dart';
 class SplashScreen extends StatefulWidget {
   final SettingsController settings;
   final CanvasThemeController canvasThemes;
+  final CampaignController campaign;
 
   SplashScreen({
     super.key,
     required this.settings,
     CanvasThemeController? canvasThemes,
-  }) : canvasThemes = canvasThemes ?? CanvasThemeController();
+    CampaignController? campaign,
+  })  : canvasThemes = canvasThemes ?? CanvasThemeController(),
+        campaign = campaign ?? CampaignController();
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -27,7 +31,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  static const _minimumDuration = Duration(milliseconds: 2700);
+  static const _minimumDuration = Duration(milliseconds: 3800);
   static const _assets = [
     'assets/sprites/clearcode/head_up.png',
     'assets/sprites/clearcode/head_down.png',
@@ -69,22 +73,22 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _snakeTravel = CurvedAnimation(
       parent: _timelineController,
-      curve: const Interval(0, 0.68, curve: Curves.easeInOutCubic),
+      curve: const Interval(0.04, 0.74, curve: Curves.easeInOut),
     );
     _fruitOpacity = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(
         parent: _timelineController,
-        curve: const Interval(0.55, 0.70, curve: Curves.easeIn),
+        curve: const Interval(0.62, 0.74, curve: Curves.easeIn),
       ),
     );
     _titleOpacity = CurvedAnimation(
       parent: _timelineController,
-      curve: const Interval(0.60, 0.86, curve: Curves.easeOut),
+      curve: const Interval(0.55, 0.85, curve: Curves.easeOut),
     );
     _titleScale = Tween<double>(begin: 0.85, end: 1.0).animate(
       CurvedAnimation(
         parent: _timelineController,
-        curve: const Interval(0.60, 0.88, curve: Curves.easeOutBack),
+        curve: const Interval(0.55, 0.88, curve: Curves.easeOutBack),
       ),
     );
     _fruitPulseController = AnimationController(
@@ -103,7 +107,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initialize() async {
     await widget.settings.load();
-    await widget.canvasThemes.load(highScore: widget.settings.highScore);
+    await widget.campaign.load(existingHighScore: widget.settings.highScore);
+    await widget.canvasThemes.load(highScore: widget.campaign.bestRunScore);
     await Future.wait(
       _assets.map((asset) => precacheImage(AssetImage(asset), context)),
     );
@@ -132,6 +137,7 @@ class _SplashScreenState extends State<SplashScreen>
         pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(
           settings: widget.settings,
           canvasThemes: widget.canvasThemes,
+          campaign: widget.campaign,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -151,7 +157,14 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       backgroundColor: AppColors.background,
-      body: LayoutBuilder(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (_timelineController.value > 0.40 && _initializationError == null) {
+            _navigateToHome();
+          }
+        },
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final areaWidth = constraints.maxWidth;
           final areaHeight = constraints.maxHeight;
@@ -159,6 +172,8 @@ class _SplashScreenState extends State<SplashScreen>
           final snakeWidth = cellSize * 4;
           final start = -snakeWidth;
           final end = areaWidth - 28 - snakeWidth;
+          final snakeTop = areaHeight * 0.44;
+          const titleGap = AppSpacing.xl;
 
           return AnimatedBuilder(
             animation: _timelineController,
@@ -166,7 +181,7 @@ class _SplashScreenState extends State<SplashScreen>
               clipBehavior: Clip.hardEdge,
               children: [
                 Positioned(
-                  top: areaHeight * 0.20,
+                  bottom: (areaHeight - snakeTop) + titleGap,
                   left: 0,
                   right: 0,
                   child: FadeTransition(
@@ -176,18 +191,26 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'SNAKE',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.displayLarge.copyWith(
-                              color: AppColors.primaryDeep,
-                              fontSize: 48,
-                              letterSpacing: 4.0,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                              ),
+                              child: Text(
+                                'SNAKE BUDDY',
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.displayLarge.copyWith(
+                                  color: AppColors.primaryDeep,
+                                  fontSize: 42,
+                                  letterSpacing: 3.5,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Container(
-                            width: 68,
+                            width: 84,
                             height: 4,
                             decoration: BoxDecoration(
                               color: AppColors.accentLime,
@@ -200,12 +223,12 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
                 Positioned(
-                  top: areaHeight * 0.47,
+                  top: snakeTop,
                   left: start + (end - start) * _snakeTravel.value,
                   child: _buildSlidingSnake(cellSize),
                 ),
                 Positioned(
-                  top: areaHeight * 0.47 + cellSize * 0.1,
+                  top: snakeTop + cellSize * 0.1,
                   right: 28,
                   child: FadeTransition(
                     opacity: _fruitOpacity,
@@ -265,6 +288,30 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'POWERED BY ',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textMuted,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                          ),
+                          Text(
+                            'ENTIRE SOLUTION',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primaryDeep,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
                       if (_initializationError != null) ...[
                         const SizedBox(height: AppSpacing.md),
                         Text(
@@ -296,6 +343,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           );
         },
+      ),
       ),
     );
   }

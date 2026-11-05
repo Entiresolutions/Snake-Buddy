@@ -11,7 +11,7 @@ class LevelRules {
 
   // Starting snake coordinates (cols: 0-14, rows: 0-19)
   static const List<List<int>> initialSnake = [
-    [7, 9],  // Head
+    [7, 9], // Head
     [7, 10], // Body
     [7, 11], // Tail
   ];
@@ -30,6 +30,20 @@ class LevelRules {
     final double factor = 1.0 - 0.01 * (level - 1);
     final int computed = (baseTick * factor).round();
     return math.max(90, computed);
+  }
+
+  /// Number of regular fruits required to spawn a banana booster in a given level.
+  /// - Levels 1-10: 5 fruits
+  /// - Levels 11-15: 7 fruits
+  /// - Levels 16-20: 10 fruits
+  /// - Levels 21-29: 15 fruits
+  /// - Level 30: 30 fruits
+  static int bananaThresholdForLevel(int level) {
+    if (level <= 10) return 5;
+    if (level <= 15) return 7;
+    if (level <= 20) return 10;
+    if (level <= 29) return 15;
+    return 30;
   }
 }
 
@@ -110,4 +124,45 @@ class LevelConfig {
 
   /// Derived tick duration in milliseconds for this level given a base tick.
   int tickMs(int baseTick) => LevelRules.calculateTickMs(baseTick, id);
+
+  /// Parsed rock cells as `[x, y]` coordinates.
+  List<List<int>> get rocks {
+    final list = <List<int>>[];
+    for (int r = 0; r < asciiMap.length; r++) {
+      for (int c = 0; c < asciiMap[r].length; c++) {
+        if (asciiMap[r][c] == '#') {
+          list.add([c, r]);
+        }
+      }
+    }
+    return list;
+  }
+
+  /// Parsed portal endpoints mapped by pair letter ('A'..'D') to lists of `[x, y]`.
+  Map<String, List<List<int>>> get portals {
+    final map = <String, List<List<int>>>{};
+    for (int r = 0; r < asciiMap.length; r++) {
+      for (int c = 0; c < asciiMap[r].length; c++) {
+        final ch = asciiMap[r][c];
+        if (ch.codeUnitAt(0) >= 65 && ch.codeUnitAt(0) <= 68) {
+          map.putIfAbsent(ch, () => []).add([c, r]);
+        }
+      }
+    }
+    return map;
+  }
+
+  /// Parsed spike cells mapped by group id (1..4) to lists of `[x, y]`.
+  Map<int, List<List<int>>> get spikes {
+    final map = <int, List<List<int>>>{};
+    for (int r = 0; r < asciiMap.length; r++) {
+      for (int c = 0; c < asciiMap[r].length; c++) {
+        final ch = asciiMap[r][c];
+        if (ch.codeUnitAt(0) >= 49 && ch.codeUnitAt(0) <= 52) {
+          map.putIfAbsent(int.parse(ch), () => []).add([c, r]);
+        }
+      }
+    }
+    return map;
+  }
 }
