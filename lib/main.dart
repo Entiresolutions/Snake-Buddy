@@ -3,11 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:snake_game/controllers/campaign_controller.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
-import 'package:snake_game/screens/splash_screen.dart';
 import 'package:snake_game/theme/app_theme.dart';
+import 'package:snake_game/ui/screens/intro_video_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   SystemChrome.setSystemUIOverlayStyle(AppTheme.systemUiOverlay);
   final settings = SettingsController();
   final canvasThemes = CanvasThemeController();
@@ -25,12 +29,14 @@ class SnakeApp extends StatelessWidget {
   final SettingsController settings;
   final CanvasThemeController canvasThemes;
   final CampaignController campaign;
+  final Widget? home;
 
   SnakeApp({
     super.key,
     required this.settings,
     CanvasThemeController? canvasThemes,
     CampaignController? campaign,
+    this.home,
   })  : canvasThemes = canvasThemes ?? CanvasThemeController(),
         campaign = campaign ?? CampaignController();
 
@@ -41,11 +47,12 @@ class SnakeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
       theme: AppTheme.lightTheme,
-      home: SplashScreen(
-        settings: settings,
-        canvasThemes: canvasThemes,
-        campaign: campaign,
-      ),
+      home: home ??
+          IntroVideoScreen(
+            settings: settings,
+            canvasThemes: canvasThemes,
+            campaign: campaign,
+          ),
     );
   }
 }

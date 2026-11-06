@@ -13,6 +13,7 @@ dependencies:
   audioplayers: ^5.2.1
   flame: ^1.33.0
   shared_preferences: ^2.3.2
+  video_player: ^2.9.2
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +30,7 @@ flutter:
     - assets/sprites/clearcode/
     - assets/sfx/
     - assets/fonts/
+    - assets/splah_before.mp4
 
   fonts:
     - family: Fredoka

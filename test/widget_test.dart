@@ -3,13 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
 import 'package:snake_game/main.dart';
+import 'package:snake_game/screens/splash_screen.dart';
 
 void main() {
   testWidgets('SnakeApp smoke test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     final settings = SettingsController();
     await settings.load();
-    await tester.pumpWidget(SnakeApp(settings: settings));
+    await tester.pumpWidget(
+      SnakeApp(
+        settings: settings,
+        home: SplashScreen(settings: settings),
+      ),
+    );
     expect(find.byType(SnakeApp), findsOneWidget);
     expect(find.text('Loading...'), findsOneWidget);
     for (var i = 0; i < 32; i++) {

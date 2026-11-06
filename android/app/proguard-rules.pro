@@ -16,6 +16,9 @@
 # SharedPreferences
 -keep class io.flutter.plugins.sharedpreferences.** { *; }
 
+# Video Player
+-keep class io.flutter.plugins.videoplayer.** { *; }
+
 # Stack traces / Line numbers for debugging production crashes
 -keepattributes SourceFile,LineNumberTable
 -keepattributes *Annotation*
