@@ -10,7 +10,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('HomeScreen has top-left Theme button and navigates to ThemeScreen',
+  testWidgets(
+      'HomeScreen has top-left Theme button and navigates to ThemeScreen',
       (tester) async {
     final settings = SettingsController();
     await settings.load();
@@ -80,7 +81,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('HomeScreen UNLOCK ALL button unlocks all levels and themes for testing',
+  testWidgets('HomeScreen does not display testing unlock button in production',
       (tester) async {
     final settings = SettingsController();
     await settings.load();
@@ -100,25 +101,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    // Initially UNLOCK ALL button is present
-    expect(find.text('UNLOCK ALL'), findsOneWidget);
+    // Verify UNLOCK ALL button is removed
+    expect(find.text('UNLOCK ALL'), findsNothing);
+    expect(find.text('UNLOCKED'), findsNothing);
     expect(find.text('1/30'), findsOneWidget);
-    expect(canvasThemes.unlockedCount, 1);
-
-    // Tap UNLOCK ALL
-    await tester.tap(find.text('UNLOCK ALL'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Verifications:
-    // 1. All themes unlocked
-    expect(canvasThemes.unlockedCount, canvasThemes.totalCount);
-    // 2. Levels chip shows 30/30
-    expect(find.text('30/30'), findsOneWidget);
-    // 3. Button changes state to UNLOCKED
-    expect(find.text('UNLOCKED'), findsOneWidget);
-    // 4. SnackBar is displayed
-    expect(find.text('All 30 levels and all themes unlocked!'), findsOneWidget);
   });
 }
-

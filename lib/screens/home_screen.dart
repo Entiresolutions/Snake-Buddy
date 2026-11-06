@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:snake_game/controllers/campaign_controller.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
@@ -35,8 +34,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late final AnimationController _fruitController;
   late final Animation<double> _fruitScale;
   late final AnimationController _snakeController;
@@ -111,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen>
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md),
                         child: Text(
                           'SNAKE BUDDY',
                           style: AppTextStyles.displayLarge.copyWith(
@@ -185,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen>
 
                     // High score & Levels chips
                     AnimatedBuilder(
-                      animation: Listenable.merge([widget.settings, widget.campaign]),
+                      animation:
+                          Listenable.merge([widget.settings, widget.campaign]),
                       builder: (context, child) => Wrap(
                         alignment: WrapAlignment.center,
                         spacing: AppSpacing.sm,
@@ -193,7 +193,8 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           StatChip(
                             label: 'High Score',
-                            value: '${math.max(widget.settings.highScore, widget.campaign.bestRunScore)}',
+                            value:
+                                '${math.max(widget.settings.highScore, widget.campaign.bestRunScore)}',
                             icon: const Icon(
                               Icons.emoji_events_rounded,
                               color: AppColors.foodBananaText,
@@ -270,154 +271,8 @@ class _HomeScreenState extends State<HomeScreen>
             left: AppSpacing.sm,
             child: _buildThemeButton(context),
           ),
-
-          // Top Right Unlock All Button (for testing)
-          Positioned(
-            top: AppSpacing.sm,
-            right: AppSpacing.sm,
-            child: _buildUnlockAllButton(context),
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildUnlockAllButton(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([widget.campaign, widget.canvasThemes]),
-      builder: (context, _) {
-        final allLevelsUnlocked = widget.campaign.highestUnlockedLevel >= 30;
-        final allThemesUnlocked =
-            widget.canvasThemes.unlockedCount >= widget.canvasThemes.totalCount;
-        final isAllUnlocked = allLevelsUnlocked && allThemesUnlocked;
-
-        return Semantics(
-          button: true,
-          label: isAllUnlocked
-              ? 'All levels and themes unlocked for testing'
-              : 'Unlock all levels and themes for testing',
-          child: Tooltip(
-            message: isAllUnlocked
-                ? 'All levels & themes unlocked (Tap to reset)'
-                : 'Unlock all levels & themes for testing',
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () async {
-                  HapticFeedback.lightImpact();
-                  if (isAllUnlocked) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'All 30 levels & themes are currently unlocked.',
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(color: Colors.white),
-                        ),
-                        backgroundColor: AppColors.primaryDeep,
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 4),
-                        action: SnackBarAction(
-                          label: 'RESET',
-                          textColor: AppColors.accentLime,
-                          onPressed: () async {
-                            await widget.campaign.resetCampaign();
-                            await widget.canvasThemes.resetThemesForTesting();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Reset levels & themes to default.',
-                                    style: AppTextStyles.bodyMedium
-                                        .copyWith(color: Colors.white),
-                                  ),
-                                  backgroundColor: AppColors.primaryDeep,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                    );
-                  } else {
-                    await widget.campaign.unlockAllLevelsForTesting();
-                    await widget.canvasThemes.unlockAllThemesForTesting();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'All 30 levels and all themes unlocked!',
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: Colors.white),
-                          ),
-                          backgroundColor: AppColors.primaryDeep,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  }
-                },
-                borderRadius: AppRadius.pillRadius,
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isAllUnlocked
-                        ? AppColors.primarySoft
-                        : AppColors.surface,
-                    borderRadius: AppRadius.pillRadius,
-                    border: Border.all(
-                      color: isAllUnlocked
-                          ? AppColors.primary
-                          : AppColors.border,
-                      width: 1.5,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadow,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isAllUnlocked
-                            ? Icons.lock_open_rounded
-                            : Icons.key_rounded,
-                        color: isAllUnlocked
-                            ? AppColors.primary
-                            : AppColors.primaryDeep,
-                        size: 18,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        isAllUnlocked ? 'UNLOCKED' : 'UNLOCK ALL',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: isAllUnlocked
-                              ? AppColors.primary
-                              : AppColors.primaryDeep,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -524,8 +379,7 @@ class _HomeScreenState extends State<HomeScreen>
         final double phase = t * 2 * math.pi;
 
         // Smooth continuous floating glide (no rotation or scaling to keep pixel lines perfectly smooth)
-        final double crawlX =
-            disableAnimations ? 0.0 : math.sin(phase) * 12.0;
+        final double crawlX = disableAnimations ? 0.0 : math.sin(phase) * 12.0;
         final double crawlY =
             disableAnimations ? 0.0 : math.sin(phase * 2) * 2.5;
 
@@ -562,7 +416,8 @@ class _HomeScreenState extends State<HomeScreen>
                 top: 0,
                 width: segSize,
                 height: segSize,
-                child: _sprite('assets/sprites/clearcode/tail_left.png', segSize),
+                child:
+                    _sprite('assets/sprites/clearcode/tail_left.png', segSize),
               ),
 
               // 3. Middle body segment 1
@@ -571,7 +426,8 @@ class _HomeScreenState extends State<HomeScreen>
                 top: 0,
                 width: segSize,
                 height: segSize,
-                child: _sprite('assets/sprites/clearcode/body_horizontal.png', segSize),
+                child: _sprite(
+                    'assets/sprites/clearcode/body_horizontal.png', segSize),
               ),
 
               // 4. Middle body segment 2
@@ -580,7 +436,8 @@ class _HomeScreenState extends State<HomeScreen>
                 top: 0,
                 width: segSize,
                 height: segSize,
-                child: _sprite('assets/sprites/clearcode/body_horizontal.png', segSize),
+                child: _sprite(
+                    'assets/sprites/clearcode/body_horizontal.png', segSize),
               ),
 
               // 5. Head segment (right, eyes facing forward)
@@ -589,7 +446,8 @@ class _HomeScreenState extends State<HomeScreen>
                 top: 0,
                 width: segSize,
                 height: segSize,
-                child: _sprite('assets/sprites/clearcode/head_right.png', segSize),
+                child:
+                    _sprite('assets/sprites/clearcode/head_right.png', segSize),
               ),
             ],
           ),
