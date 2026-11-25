@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
+import 'package:snake_game/services/theme_ad_service.dart';
 import 'package:snake_game/theme/app_colors.dart';
 import 'package:snake_game/theme/app_radius.dart';
 import 'package:snake_game/theme/app_spacing.dart';
 import 'package:snake_game/theme/app_text_styles.dart';
 import 'package:snake_game/theme/canvas_themes.dart';
 import 'package:snake_game/widgets/app_card.dart';
+import 'package:snake_game/widgets/primary_button.dart';
 import 'package:snake_game/widgets/responsive.dart';
 import 'package:snake_game/widgets/responsive_scaffold.dart';
+import 'package:snake_game/widgets/secondary_button.dart';
 
 class ThemeScreen extends StatefulWidget {
   final SettingsController settings;
@@ -30,11 +33,13 @@ class _ThemeScreenState extends State<ThemeScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
+  final ThemeAdService _themeAdService = ThemeAdService();
   String? _shakingThemeId;
 
   @override
   void initState() {
     super.initState();
+    _themeAdService.preloadAd();
     _shakeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -51,6 +56,7 @@ class _ThemeScreenState extends State<ThemeScreen>
 
   @override
   void dispose() {
+    _themeAdService.dispose();
     _shakeController.dispose();
     super.dispose();
   }
@@ -60,6 +66,11 @@ class _ThemeScreenState extends State<ThemeScreen>
     if (!isUnlocked) {
       if (widget.settings.vibrationEnabled) {
         HapticFeedback.lightImpact();
+      }
+
+      if (theme.unlockAdsRequired > 0) {
+        await _showUnlockThemeDialog(theme);
+        return;
       }
 
       final reduceMotion = MediaQuery.of(context).disableAnimations;
@@ -90,6 +101,193 @@ class _ThemeScreenState extends State<ThemeScreen>
     await widget.canvasThemes.selectTheme(theme.id);
   }
 
+  Future<void> _showUnlockThemeDialog(CanvasTheme theme) async {
+    bool isWatchingAd = false;
+    String? errorMessage;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final watched = widget.canvasThemes.getAdWatchCount(theme.id);
+          final requiredAds = theme.unlockAdsRequired;
+          final remaining = (requiredAds - watched).clamp(0, requiredAds);
+          final progress =
+              requiredAds > 0 ? (watched / requiredAds).clamp(0.0, 1.0) : 1.0;
+
+          return PopScope(
+            canPop: !isWatchingAd,
+            child: Dialog(
+              backgroundColor: AppColors.surface,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.lg,
+              ),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primarySoft,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.ondemand_video_rounded,
+                          color: AppColors.primaryDeep,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Unlock ${theme.name}',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.titleLarge.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Watch $requiredAds ${requiredAds == 1 ? 'ad' : 'ads'} to unlock early, or reach ${theme.unlockScore} points.',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Ads Watched',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '$watched / $requiredAds',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primaryDeep,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: AppRadius.pillRadius,
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: AppColors.surfaceMuted,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      if (errorMessage != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.danger,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(
+                        width: double.infinity,
+                        child: PrimaryButton(
+                          label: isWatchingAd
+                              ? 'LOADING AD...'
+                              : remaining == 1
+                                  ? 'WATCH AD TO UNLOCK'
+                                  : 'WATCH AD ($remaining LEFT)',
+                          icon: Icons.ondemand_video_rounded,
+                          onPressed: isWatchingAd
+                              ? null
+                              : () async {
+                                  setDialogState(() {
+                                    isWatchingAd = true;
+                                    errorMessage = null;
+                                  });
+
+                                  final earned = await _themeAdService.showAd();
+                                  if (!mounted || !dialogCtx.mounted) return;
+
+                                  if (!earned) {
+                                    setDialogState(() {
+                                      isWatchingAd = false;
+                                      errorMessage =
+                                          'Ad not ready or closed early. Watch the full ad to progress.';
+                                    });
+                                    return;
+                                  }
+
+                                  final unlockedNow = await widget.canvasThemes
+                                      .recordAdWatchForTheme(theme.id);
+                                  if (!mounted || !dialogCtx.mounted) return;
+
+                                  if (unlockedNow) {
+                                    await widget.canvasThemes
+                                        .selectTheme(theme.id);
+                                    if (!mounted || !dialogCtx.mounted) return;
+                                    Navigator.of(dialogCtx).pop();
+                                    ScaffoldMessenger.of(context)
+                                        .hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '${theme.name} unlocked!',
+                                          style: AppTextStyles.bodyMedium
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                        backgroundColor: AppColors.primaryDeep,
+                                        behavior: SnackBarBehavior.floating,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  } else {
+                                    setDialogState(() {
+                                      isWatchingAd = false;
+                                    });
+                                  }
+                                },
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SecondaryButton(
+                          height: 46.0,
+                          label: 'CANCEL',
+                          onPressed: isWatchingAd
+                              ? null
+                              : () => Navigator.of(dialogCtx).pop(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
@@ -109,7 +307,7 @@ class _ThemeScreenState extends State<ThemeScreen>
               final isLandscape = Responsive.isLandscape(context);
               final textScale = MediaQuery.textScalerOf(context).scale(1.0);
               final cardHeight =
-                  (220.0 + (textScale - 1.0) * 55.0).clamp(215.0, 270.0);
+                  (162.0 + (textScale - 1.0) * 45.0).clamp(158.0, 210.0);
 
               return SingleChildScrollView(
                 padding: AppSpacing.screenPadding,
@@ -271,6 +469,8 @@ class _ThemeScreenState extends State<ThemeScreen>
                         final isSelected =
                             widget.canvasThemes.selectedThemeId == theme.id;
                         final isNew = widget.canvasThemes.isNew(theme.id);
+                        final adWatchCount =
+                            widget.canvasThemes.getAdWatchCount(theme.id);
                         final isShaking = _shakingThemeId == theme.id;
 
                         Widget card = _CanvasCard(
@@ -279,6 +479,7 @@ class _ThemeScreenState extends State<ThemeScreen>
                           isSelected: isSelected,
                           isNew: isNew,
                           highScore: highScore,
+                          adWatchCount: adWatchCount,
                           onTap: () => _onTapTheme(theme),
                         );
 
@@ -319,6 +520,7 @@ class _CanvasCard extends StatefulWidget {
   final bool isSelected;
   final bool isNew;
   final int highScore;
+  final int adWatchCount;
   final VoidCallback onTap;
 
   const _CanvasCard({
@@ -327,6 +529,7 @@ class _CanvasCard extends StatefulWidget {
     required this.isSelected,
     required this.isNew,
     required this.highScore,
+    required this.adWatchCount,
     required this.onTap,
   });
 
@@ -434,7 +637,7 @@ class _CanvasCardState extends State<_CanvasCard> {
                     _MiniColorDots(theme: widget.theme),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(height: 6),
 
                 // Status Area
                 if (widget.isSelected) ...[
@@ -471,7 +674,9 @@ class _CanvasCardState extends State<_CanvasCard> {
                   ),
                 ] else ...[
                   Text(
-                    'Reach ${widget.theme.unlockScore} pts to unlock',
+                    widget.theme.unlockAdsRequired > 0
+                        ? '${widget.theme.unlockScore} pts or ${widget.adWatchCount}/${widget.theme.unlockAdsRequired} ${widget.theme.unlockAdsRequired == 1 ? 'ad' : 'ads'}'
+                        : 'Reach ${widget.theme.unlockScore} pts to unlock',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textMuted,
                       fontSize: 11,

@@ -195,7 +195,7 @@ void main() {
                     isNewBest: false,
                     unlockedThemes: const [],
                     canvasThemes: canvasThemes,
-                    onSecondChance: () {},
+                    onSecondChance: () async => true,
                     onRetry: () {},
                     onLevelSelect: () {},
                     onHome: () {},

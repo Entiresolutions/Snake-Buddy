@@ -322,6 +322,7 @@ class _SnakePlayScreenState extends State<SnakePlayScreen>
 
     _initLevelHazards();
     _createRegularFoodSafe();
+    _chanceService.preloadAd();
 
     widget.settings.addListener(_onSettingsChanged);
 
@@ -443,6 +444,7 @@ class _SnakePlayScreenState extends State<SnakePlayScreen>
     _sfxEat.dispose();
     _sfxStart.dispose();
     _sfxOver.dispose();
+    _chanceService.dispose();
     super.dispose();
   }
 
@@ -959,9 +961,9 @@ class _SnakePlayScreenState extends State<SnakePlayScreen>
     );
   }
 
-  Future<void> _onSecondChanceRequested() async {
+  Future<bool> _onSecondChanceRequested() async {
     final granted = await _chanceService.requestChance();
-    if (!granted || !mounted) return;
+    if (!granted || !mounted) return false;
 
     widget.campaign.useChance();
 
@@ -1019,6 +1021,7 @@ class _SnakePlayScreenState extends State<SnakePlayScreen>
 
     // Show 3-2-1 "Get Ready" countdown overlay
     _startCountdownAndResume();
+    return true;
   }
 
   bool _isSnapshotSafeForTwoSteps(GameSnapshot snap) {

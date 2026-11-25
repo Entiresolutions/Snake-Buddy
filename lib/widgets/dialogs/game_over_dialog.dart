@@ -18,10 +18,10 @@ class GameOverDialog extends StatefulWidget {
   final bool isNewBest;
   final List<CanvasTheme> unlockedThemes;
   final CanvasThemeController canvasThemes;
-  final VoidCallback onSecondChance;
   final VoidCallback onRetry;
   final VoidCallback onLevelSelect;
   final VoidCallback onHome;
+  final Future<bool> Function() onSecondChance;
 
   const GameOverDialog({
     super.key,
@@ -44,6 +44,30 @@ class GameOverDialog extends StatefulWidget {
 }
 
 class _GameOverDialogState extends State<GameOverDialog> {
+  bool _isWatchingAd = false;
+  String? _adErrorMessage;
+
+  Future<void> _handleSecondChanceTap() async {
+    if (_isWatchingAd) return;
+    setState(() {
+      _isWatchingAd = true;
+      _adErrorMessage = null;
+    });
+
+    final granted = await widget.onSecondChance();
+    if (!mounted) return;
+
+    if (granted) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() {
+        _isWatchingAd = false;
+        _adErrorMessage =
+            'Ad not available or closed early. Watch the full ad to get a second chance.';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasChances = widget.chancesRemaining > 0;
@@ -215,21 +239,30 @@ class _GameOverDialogState extends State<GameOverDialog> {
             ],
             const SizedBox(height: AppSpacing.xl),
 
-            // Primary: Second Chance
+            // Primary: Second Chance (Watch Rewarded Ad)
+            if (_adErrorMessage != null) ...[
+              Text(
+                _adErrorMessage!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
             SizedBox(
               width: double.infinity,
               child: PrimaryButton(
-                label: hasChances
-                    ? 'SECOND CHANCE (${widget.chancesRemaining} LEFT)'
-                    : 'NO CHANCES LEFT',
-                icon: Icons.favorite_rounded,
-                semanticsLabel: 'Use second chance',
-                onPressed: hasChances
-                    ? () {
-                        Navigator.of(context).pop();
-                        widget.onSecondChance();
-                      }
-                    : null,
+                label: _isWatchingAd
+                    ? 'LOADING AD...'
+                    : (hasChances
+                        ? 'SECOND CHANCE (${widget.chancesRemaining} LEFT)'
+                        : 'NO CHANCES LEFT'),
+                icon: Icons.ondemand_video_rounded,
+                semanticsLabel: 'Watch ad for second chance',
+                onPressed:
+                    hasChances && !_isWatchingAd ? _handleSecondChanceTap : null,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -241,10 +274,12 @@ class _GameOverDialogState extends State<GameOverDialog> {
                 label: 'RETRY LEVEL',
                 icon: Icons.replay_rounded,
                 semanticsLabel: 'Retry level',
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  widget.onRetry();
-                },
+                onPressed: _isWatchingAd
+                    ? null
+                    : () {
+                        Navigator.of(context).pop();
+                        widget.onRetry();
+                      },
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -263,10 +298,12 @@ class _GameOverDialogState extends State<GameOverDialog> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     fontSize: 13,
                     semanticsLabel: 'Select level',
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onLevelSelect();
-                    },
+                    onPressed: _isWatchingAd
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            widget.onLevelSelect();
+                          },
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -281,10 +318,12 @@ class _GameOverDialogState extends State<GameOverDialog> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     fontSize: 13,
                     semanticsLabel: 'Return home',
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onHome();
-                    },
+                    onPressed: _isWatchingAd
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            widget.onHome();
+                          },
                   ),
                 ),
               ],

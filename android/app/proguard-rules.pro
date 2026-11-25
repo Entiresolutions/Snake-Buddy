@@ -19,6 +19,17 @@
 # Video Player
 -keep class io.flutter.plugins.videoplayer.** { *; }
 
+# Google Mobile Ads & WebView
+-keep class io.flutter.plugins.googlemobileads.** { *; }
+-keep class io.flutter.plugins.webviewflutter.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.android.ump.** { *; }
+-keep class androidx.work.** { *; }
+-keep class androidx.startup.** { *; }
+-keep class androidx.media3.** { *; }
+-dontwarn com.google.android.gms.ads.**
+-dontwarn com.google.android.ump.**
+
 # Stack traces / Line numbers for debugging production crashes
 -keepattributes SourceFile,LineNumberTable
 -keepattributes *Annotation*

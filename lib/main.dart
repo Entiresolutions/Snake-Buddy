@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:snake_game/controllers/campaign_controller.dart';
 import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
@@ -23,6 +27,17 @@ Future<void> main() async {
       campaign: campaign,
     ),
   );
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        unawaited(
+          MobileAds.instance.initialize().then((_) {}, onError: (_) {}),
+        );
+      } catch (_) {}
+    });
+  }
 }
 
 class SnakeApp extends StatelessWidget {

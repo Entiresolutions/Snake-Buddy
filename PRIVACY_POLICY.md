@@ -1,5 +1,5 @@
 # Privacy Policy
-Snake Buddy | Effective November 6, 2026 | Last updated November 6, 2026
+Snake Buddy | Effective November 6, 2026 | Last updated November 26, 2026
 
 ## 01 Overview
 Entire Solutions develops and publishes Snake Buddy, a 2D casual arcade action game designed for mobile devices running Android and iOS. This Privacy Policy explains how Snake Buddy handles information when you install, play, and interact with the game.
@@ -15,22 +15,22 @@ Snake Buddy stores game-related data locally on your device using native sandbox
 
 - Settings preferences: Your choices for sound effects (on/off), haptic vibration feedback (on/off), grid lines visibility (on/off), game difficulty (easy, normal, hard), and control scheme (swipe controls or on-screen directional buttons).
 - Gameplay progression and high scores: Your highest unlocked campaign level (levels 1 through 30), the star ratings earned on each level (0 to 3 stars per level), current run scores, and personal best high scores.
-- Canvas theme unlocks: Your active canvas background theme selection, the list of unlocked canvas themes unlocked via gameplay score milestones, and viewed theme status indicators.
+- Canvas theme unlocks and ad progress: Your active canvas background theme selection, the list of unlocked canvas themes (unlocked via gameplay score milestones or optional rewarded ad watches), per-theme ad watch progress counters, and viewed theme status indicators.
+- Ad pacing flag: A local boolean flag (`ads.hasPlayedFirstGame`) indicating whether you have started your first game, used solely to skip the App Open Ad on your very first play.
 - In-memory gameplay buffer: Temporary game coordinates and positions retained in volatile device memory during an active game attempt to enable the Second Chance rewind mechanism. This transient buffer is cleared when the level ends or restarts.
 
 This information is kept entirely within the application sandbox on your device. Entire Solutions has no access to this local data.
 
 ## 03 Advertising and information processed by third parties
-To keep Snake Buddy free to download and play, the game includes or is prepared to include third-party advertising services <!-- TODO: confirm AdMob app ID and active ad format release schedule -->.
+To keep Snake Buddy free to download and play, the game integrates Google AdMob third-party advertising services.
 
 ### Third-party SDKs
 - Google AdMob and Google Play Services (operated by Google LLC and Google Ireland Limited): Serves in-game advertisements, handles consent collection, and provides ad delivery analytics.
 
 ### Ad formats supported
-- Banner ads: Displayed at designated non-gameplay screen areas.
-- Interstitial ads: Full-screen advertisements displayed at natural game transitions (such as between level attempts or after game over).
-- Rewarded video ads: Optional video advertisements that players may voluntarily choose to watch to earn in-game perks, such as Second Chance continues.
-- App-open ads: Displayed briefly when the app is brought to the foreground from an idle state.
+- Rewarded ads: Optional video advertisements that players may voluntarily choose to watch after Game Over to earn a Second Chance continue (limited to 1 per level attempt).
+- Rewarded interstitial ads: Optional advertisements that players may voluntarily choose to watch in the Theme gallery to unlock locked canvas themes early (requiring 1 to 5 ads depending on the theme).
+- App-open ads: Full-screen advertisements displayed when selecting a level to start gameplay (skipped on the player's very first game play and not shown on the splash screen).
 
 ### Data categories processed by advertising providers
 When connected to the internet, advertising SDKs may automatically collect and process certain technical data from your device to deliver, personalize, and measure advertisements:
@@ -63,7 +63,7 @@ You have full control over how advertising identifiers and personalization are u
   - Open device Settings > Privacy & Security > Tracking, and disable "Allow Apps to Request to Track".
   - Open device Settings > Privacy & Security > Apple Advertising, and toggle off "Personalized Ads".
 - Regional consent management (EEA, UK, and Switzerland):
-  - In eligible jurisdictions subject to the General Data Protection Regulation (GDR/UK GDPR), an initial User Messaging Platform (UMP) consent dialogue is presented to allow you to accept, decline, or configure personalized ad consent and vendor permissions.
+  - In eligible jurisdictions subject to the General Data Protection Regulation (GDPR/UK GDPR), an initial User Messaging Platform (UMP) consent dialogue is presented to allow you to accept, decline, or configure personalized ad consent and vendor permissions.
 - Offline play:
   - You can play Snake Buddy completely offline by turning off mobile data and Wi-Fi or enabling Airplane Mode. When offline, no network requests are sent and no advertising data is transmitted.
 
@@ -73,6 +73,7 @@ Snake Buddy requests and uses only the minimum permissions necessary to function
 - `android.permission.INTERNET`: Required to connect to the internet to load online advertisements and deliver ad impressions.
 - `android.permission.ACCESS_NETWORK_STATE`: Required to verify whether an active internet connection is available before initiating network requests, conserving battery and data.
 - `android.permission.VIBRATE`: Required exclusively to trigger tactile haptic vibration when your snake eats fruits, collects banana boosters, crashes into obstacles, or clears a level. This permission accesses only the vibration actuator and does not access personal data.
+- `com.google.android.gms.permission.AD_ID`: Required by Google Play Services / Google AdMob on Android 13+ to access the Google Advertising ID (GAID) for ad delivery and frequency capping, unless reset or deleted by the user in device settings.
 
 ### Hardware features
 - `android.hardware.touchscreen` (marked `android:required="false"`): Declares that a physical touchscreen is not strictly mandatory, enabling compatibility with non-touch systems such as Android TV, foldables, and Chromebooks using keyboard or mouse input.

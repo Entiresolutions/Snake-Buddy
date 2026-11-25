@@ -7,6 +7,7 @@ import 'package:snake_game/controllers/canvas_theme_controller.dart';
 import 'package:snake_game/controllers/settings_controller.dart';
 import 'package:snake_game/levels/level_catalog.dart';
 import 'package:snake_game/levels/level_model.dart';
+import 'package:snake_game/services/app_open_ad_service.dart';
 import 'package:snake_game/theme/app_colors.dart';
 import 'package:snake_game/theme/app_radius.dart';
 import 'package:snake_game/theme/app_spacing.dart';
@@ -35,11 +36,14 @@ class LevelSelectScreen extends StatefulWidget {
 class _LevelSelectScreenState extends State<LevelSelectScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
+  final AppOpenAdService _appOpenAdService = AppOpenAdService();
   int? _shakingLevelId;
+  bool _isOpeningLevel = false;
 
   @override
   void initState() {
     super.initState();
+    _appOpenAdService.preloadIfEligible();
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -48,11 +52,14 @@ class _LevelSelectScreenState extends State<LevelSelectScreen>
 
   @override
   void dispose() {
+    _appOpenAdService.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
-  void _onLevelTap(LevelConfig level) {
+  Future<void> _onLevelTap(LevelConfig level) async {
+    if (_isOpeningLevel) return;
+
     final isUnlocked = widget.campaign.isLevelUnlocked(level.id);
     if (!isUnlocked) {
       setState(() => _shakingLevelId = level.id);
@@ -75,23 +82,31 @@ class _LevelSelectScreenState extends State<LevelSelectScreen>
       return;
     }
 
-    widget.campaign.startLevel(level.id, resetRunScore: true);
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            SnakePlayScreen(
-          settings: widget.settings,
-          canvasThemes: widget.canvasThemes,
-          campaign: widget.campaign,
-          initialLevelId: level.id,
-          showIntro: true,
+    _isOpeningLevel = true;
+    try {
+      await _appOpenAdService.showBeforeLevelStartIfEligible();
+      if (!mounted) return;
+
+      widget.campaign.startLevel(level.id, resetRunScore: true);
+      await Navigator.of(context).push(
+        PageRouteBuilder<void>(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              SnakePlayScreen(
+            settings: widget.settings,
+            canvasThemes: widget.canvasThemes,
+            campaign: widget.campaign,
+            initialLevelId: level.id,
+            showIntro: true,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 280),
         ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 280),
-      ),
-    );
+      );
+    } finally {
+      _isOpeningLevel = false;
+    }
   }
 
   @override

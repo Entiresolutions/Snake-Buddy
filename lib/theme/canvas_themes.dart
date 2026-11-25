@@ -10,6 +10,7 @@ class CanvasTheme {
   final String name;
   final String description;
   final int unlockScore;
+  final int unlockAdsRequired;
   final Color boardLight;
   final Color boardDark;
   final Color boardFrame;
@@ -25,6 +26,7 @@ class CanvasTheme {
     required this.name,
     required this.description,
     required this.unlockScore,
+    this.unlockAdsRequired = 0,
     required this.boardLight,
     required this.boardDark,
     required this.boardFrame,
@@ -294,6 +296,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Fresh Meadow',
     description: 'Lush grass & classic periwinkle snake',
     unlockScore: 0,
+    unlockAdsRequired: 0,
     boardLight: AppColors.boardLight,
     boardDark: AppColors.boardDark,
     boardFrame: AppColors.boardFrame,
@@ -309,6 +312,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Ocean Breeze',
     description: 'Soothing tide & coral orange snake',
     unlockScore: 15,
+    unlockAdsRequired: 1,
     boardLight: Color(0xFFA9DDF0),
     boardDark: Color(0xFF9AD3E8),
     boardFrame: Color(0xFF4FA3C7),
@@ -324,6 +328,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Sunset Desert',
     description: 'Warm golden sands & regal purple snake',
     unlockScore: 35,
+    unlockAdsRequired: 2,
     boardLight: Color(0xFFF4DDA8),
     boardDark: Color(0xFFEDD398),
     boardFrame: Color(0xFFC99A4A),
@@ -339,6 +344,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Candy Pop',
     description: 'Pastel sugar & vibrant aqua snake',
     unlockScore: 60,
+    unlockAdsRequired: 3,
     boardLight: Color(0xFFFBCFE3),
     boardDark: Color(0xFFF7C0DA),
     boardFrame: Color(0xFFE58AB5),
@@ -354,6 +360,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Frosty Peak',
     description: 'Glacial peaks & brilliant magenta snake',
     unlockScore: 100,
+    unlockAdsRequired: 4,
     boardLight: Color(0xFFE6F1F9),
     boardDark: Color(0xFFD8E8F4),
     boardFrame: Color(0xFF9DBBD3),
@@ -369,6 +376,7 @@ const List<CanvasTheme> kCanvasThemes = [
     name: 'Midnight Neon',
     description: 'Deep night sky & glowing neon lime snake',
     unlockScore: 150,
+    unlockAdsRequired: 5,
     boardLight: Color(0xFF2E3B5A),
     boardDark: Color(0xFF27334F),
     boardFrame: Color(0xFF141C30),

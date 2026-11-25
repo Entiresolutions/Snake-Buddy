@@ -7,12 +7,14 @@ class CanvasThemeController extends ChangeNotifier {
   static const _selectedKey = 'canvas.selectedTheme';
   static const _unlockedKey = 'canvas.unlockedThemes';
   static const _viewedKey = 'canvas.viewedThemes';
+  static const _adWatchCountsKey = 'canvas.adWatchCounts';
 
   SharedPreferences? _preferences;
 
   String _selectedThemeId = 'meadow';
   Set<String> _unlockedIds = {'meadow'};
   Set<String> _viewedIds = {'meadow'};
+  Map<String, int>? _adWatchCounts = {};
 
   String get selectedThemeId => _selectedThemeId;
   Set<String> get unlockedIds => Set.unmodifiable(_unlockedIds);
@@ -29,6 +31,9 @@ class CanvasThemeController extends ChangeNotifier {
   }
 
   bool isUnlocked(String themeId) => _unlockedIds.contains(themeId);
+
+  int getAdWatchCount(String themeId) =>
+      (_adWatchCounts ?? const {})[themeId] ?? 0;
 
   bool isNew(String themeId) {
     return _unlockedIds.contains(themeId) && !_viewedIds.contains(themeId);
@@ -62,6 +67,21 @@ class CanvasThemeController extends ChangeNotifier {
       _viewedIds = {'meadow'};
     }
     _viewedIds.add('meadow');
+
+    final savedAdCounts = _preferences?.getStringList(_adWatchCountsKey);
+    final loadedCounts = <String, int>{};
+    if (savedAdCounts != null) {
+      for (final entry in savedAdCounts) {
+        final parts = entry.split(':');
+        if (parts.length == 2) {
+          final count = int.tryParse(parts[1]) ?? 0;
+          if (count > 0) {
+            loadedCounts[parts[0]] = count;
+          }
+        }
+      }
+    }
+    _adWatchCounts = loadedCounts;
 
     final savedSelected = _preferences?.getString(_selectedKey) ?? 'meadow';
     if (_unlockedIds.contains(savedSelected) &&
@@ -127,6 +147,38 @@ class CanvasThemeController extends ChangeNotifier {
     return newlyUnlocked;
   }
 
+  /// Records a completed rewarded ad watch for [themeId].
+  /// Returns `true` if the theme reached its required ad count and is now unlocked.
+  Future<bool> recordAdWatchForTheme(String themeId) async {
+    final theme = kCanvasThemes.firstWhere(
+      (t) => t.id == themeId,
+      orElse: () => kCanvasThemes.first,
+    );
+    if (_unlockedIds.contains(theme.id)) {
+      return true;
+    }
+
+    final counts = _adWatchCounts ??= {};
+    final nextCount = (counts[theme.id] ?? 0) + 1;
+    counts[theme.id] = nextCount;
+
+    _preferences ??= await SharedPreferences.getInstance();
+    await _preferences?.setStringList(
+      _adWatchCountsKey,
+      counts.entries.map((e) => '${e.key}:${e.value}').toList(),
+    );
+
+    bool unlockedNow = false;
+    if (theme.unlockAdsRequired > 0 && nextCount >= theme.unlockAdsRequired) {
+      _unlockedIds.add(theme.id);
+      await _preferences?.setStringList(_unlockedKey, _unlockedIds.toList());
+      unlockedNow = true;
+    }
+
+    notifyListeners();
+    return unlockedNow;
+  }
+
   /// Unlocks all canvas themes for testing.
   Future<void> unlockAllThemesForTesting() async {
     for (final theme in kCanvasThemes) {
@@ -142,10 +194,12 @@ class CanvasThemeController extends ChangeNotifier {
     _unlockedIds = {'meadow'};
     _viewedIds = {'meadow'};
     _selectedThemeId = 'meadow';
+    _adWatchCounts = {};
     _preferences ??= await SharedPreferences.getInstance();
     await _preferences?.setStringList(_unlockedKey, ['meadow']);
     await _preferences?.setStringList(_viewedKey, ['meadow']);
     await _preferences?.setString(_selectedKey, 'meadow');
+    await _preferences?.setStringList(_adWatchCountsKey, []);
     notifyListeners();
   }
 }
